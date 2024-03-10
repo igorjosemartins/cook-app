@@ -6,10 +6,11 @@ import { Recipe } from "@/components/Recipe";
 import { useEffect, useState } from "react";
 import { services } from "@/services";
 import { Ingredients } from "@/components/Ingredients";
+import { Button } from "@/components/Button";
 
 export default function Recipes() {
-    
-    const params = useLocalSearchParams<{ ingredientsIds: string}>()
+
+    const params = useLocalSearchParams<{ ingredientsIds: string }>()
 
     // retorna uma string com os IDs entre virgulas, então criamos um array com os IDs
     const ingredientsIds = params.ingredientsIds.split(",");
@@ -39,16 +40,36 @@ export default function Recipes() {
 
             <Ingredients ingredients={ingredients} />
 
+            {recipes.length === 0 && (
+                <View style={styles.notFoundBody}>
+                    <Text style={styles.notFoundMessage}>
+                        Ainda não existem receitas com
+                        {"\n"}
+                        estes ingredientes
+                    </Text>
+                    <Button title="Criar nova receita"></Button>
+                </View>
+                )
+            }
+
             <FlatList
-                    data={recipes}
-                    keyExtractor={item => item.id}
-                    renderItem={({ item }) => <Recipe recipe={item}/>}
-                    style={styles.recipes}
-                    contentContainerStyle={styles.recipesContent}
-                    showsVerticalScrollIndicator={false}
-                    columnWrapperStyle={{ gap: 16 }}
-                    numColumns={2}
-                />
+                data={recipes}
+                keyExtractor={item => item.id}
+                renderItem={
+                    ({ item }) =>
+                        <Recipe
+                            recipe={item}
+                            onPress={() =>
+                                router.navigate(`/recipe/${item.id}`)
+                            }
+                        />
+                }
+                style={styles.recipes}
+                contentContainerStyle={styles.recipesContent}
+                showsVerticalScrollIndicator={false}
+                columnWrapperStyle={{ gap: 16 }}
+                numColumns={2}
+            />
         </View>
     )
 }
