@@ -1,16 +1,19 @@
-import { View, Text, ScrollView, Alert } from "react-native";
 import { styles } from "./styles";
-import { useState } from "react";
+import { View, Text, ScrollView, Alert } from "react-native";
+import { useState, useEffect } from "react";
+import { router } from "expo-router";
 import { Ingredient } from "@/components/Ingredient";
 import { Selected } from "@/components/Selected";
+import { services } from "@/services"
 
 export default function Index() {
 
-    const [selectedIngredient, setSelectedIngredient] = useState<string[]>([])
+    const [selectedIngredients, setSelectedIngredients] = useState<string[]>([])
+    const [ingredients, setIngredients] = useState<IngredientResponse[]>([])
 
     function handleToggleSelected(value: string) {
 
-        if (selectedIngredient.includes(value)) {
+        if (selectedIngredients.includes(value)) {
             // setar um novo array => pega o valor atual do selectedIngredient (state)
             // filter => retorna um novo array contendo os elementos que satisfazem uma condição:
             // no caso, se o item for diferente do atual selecionado, ele será mantido, senão removido
@@ -18,18 +21,26 @@ export default function Index() {
             // verifica se o ingrediente selecionado já está selecionado
             // se sim => é retirado 
             // se não => é mantido
-            return setSelectedIngredient((state) => state.filter((item) => item !== value))
+            return setSelectedIngredients((state) => state.filter((item) => item !== value))
         }
 
-        setSelectedIngredient((state) => [...state, value])
+        setSelectedIngredients((state) => [...state, value])
     }
 
     function handleClearSelected() {
         Alert.alert("Limpar", "Deseja limpar tudo?", [
             { text: "Não", style: "cancel" },
-            { text: "Sim", onPress: () => setSelectedIngredient([]) },
+            { text: "Sim", onPress: () => setSelectedIngredients([]) },
         ])
     }
+
+    function handleSearch() {
+        router.navigate("/recipes/" + selectedIngredients)
+    }
+
+    useEffect(() => {
+        services.ingredients.findAll().then(setIngredients)
+    }, [])
 
     return (
         <View style={styles.container}>
@@ -43,21 +54,22 @@ export default function Index() {
             </Text>
 
             <ScrollView contentContainerStyle={styles.ingredients} showsVerticalScrollIndicator={false}>
-                {Array.from({ length: 100 }).map((item, index) => (
+                {ingredients.map((item) => (
                     <Ingredient
-                        key={index}
-                        name="Tomate"
-                        image=""
-                        selected={selectedIngredient.includes(String(index))}
-                        onPress={() => handleToggleSelected(String(index))} />
+                        key={item.id}
+                        name={item.name}
+                        image={`${services.storage.imagePath}/${item.image}`}
+                        selected={selectedIngredients.includes(item.id)}
+                        onPress={() => handleToggleSelected(item.id)}
+                    />
                 ))}
             </ScrollView>
 
-            {selectedIngredient.length > 0 && (
+            {selectedIngredients.length > 0 && (
                 <Selected
-                    quantity={selectedIngredient.length}
+                    quantity={selectedIngredients.length}
                     onClear={handleClearSelected}
-                    onSearch={() => {}}
+                    onSearch={handleSearch}
                 />)
             }
         </View>
